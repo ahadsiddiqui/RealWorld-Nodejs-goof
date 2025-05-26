@@ -1,5 +1,5 @@
 pipeline {
-  agent any                          // run on any available Jenkins agent
+  agent any                          //run on any available Jenkins agent
 
   stages {
     stage('Build') {                 // ▸ Stage name shown in Blue Ocean
