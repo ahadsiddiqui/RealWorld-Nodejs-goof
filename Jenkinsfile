@@ -14,7 +14,7 @@ pipeline {
         bat 'npm run build'          //   transpile/compile/bundle (per package.json)
       }
     }
-  } 
+  }  
 }   
  
  
