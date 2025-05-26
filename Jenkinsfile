@@ -11,7 +11,7 @@ pipeline {
         // On Windows agents use `bat`, on Linux/macOS use `sh`
         // Here: Windows example
         bat 'npm ci'                  // clean-install all dependencies
-        bat 'npm run build'          //transpile/compile/bundle (per package.json)
+        bat 'npm run build'          // transpile/compile/bundle (per package.json)
       }
     }
   } 
