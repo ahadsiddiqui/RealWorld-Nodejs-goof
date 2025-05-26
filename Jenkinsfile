@@ -2,7 +2,7 @@ pipeline {
   agent any                          //run on any available Jenkins agent
 
   stages {
-    stage('Build') {                 // ▸ Stage name shown in Blue Ocean
+    stage('Build') {                 // Stage name shown in Blue Ocean
       steps {
         // 1) Ensure npm packages are installed
         // 2) Run the project’s build script (if one exists)
