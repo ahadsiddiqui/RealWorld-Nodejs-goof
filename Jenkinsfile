@@ -8,11 +8,13 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
-        // Tool: Git
+        // Tool: Git (Jenkins Git plugin)
         checkout([
           $class: 'GitSCM',
           branches: [[name: '*/main']],
-          userRemoteConfigs: [[url: 'https://github.com/ahadsiddiqui/RealWorld-Nodejs-goof']]
+          userRemoteConfigs: [[
+            url: 'https://github.com/ahadsiddiqui/RealWorld-Nodejs-goof'
+          ]]
         ])
       }
     }
@@ -24,11 +26,20 @@ pipeline {
       }
     }
 
-    stage('Unit Tests') {
+    stage('Run Unit Tests') {
       steps {
-        // Tool: npm test
+        // Always capture output to testlog.txt, but never fail the pipeline
         catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-          bat 'npm test > testlog.txt || exit 0'
+          bat 'npm test > testlog.txt 2>&1 || exit 0'
+        }
+      }
+    }
+
+    stage('Security Audit') {
+      steps {
+        // Always capture output to auditlog.txt, but never fail the pipeline
+        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+          bat 'npm audit > auditlog.txt 2>&1 || exit 0'
         }
       }
     }
@@ -37,10 +48,10 @@ pipeline {
       steps {
         // Tool: Newman (Postman CLI)
         catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-          // ensure newman is installed
+          // ensure newman is available
           bat 'npm list -g newman || npm install -g newman'
 
-          // run collection and export JUnit XML in one single command
+          // run collection → output JUnit XML
           bat 'newman run tests/collection.json --environment tests/env.json --reporters cli,junit --reporter-junit-export integration-results.xml'
         }
       }
@@ -49,21 +60,21 @@ pipeline {
 
   post {
     always {
-      // archive all three logs/artifacts
+      // 1) Archive all three artifacts so you see them in the Jenkins UI
       archiveArtifacts artifacts: 'testlog.txt,auditlog.txt,integration-results.xml', allowEmptyArchive: true
 
-      // send one email with everything attached
+      // 2) Send one single email with all three attached + the full console log
       script {
-        def result = currentBuild.currentResult ?: 'SUCCESS'
+        def status = currentBuild.currentResult ?: 'SUCCESS'
         emailext(
           to:               EMAIL_RECIPIENT,
-          subject:          "Build ${result}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+          subject:          "Build ${status}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
           body:             """\
             Hello,
 
-            Your pipeline finished with status: ${result}
+            Your pipeline has finished with status: ${status}
 
-            • View console log: ${env.BUILD_URL}console
+            • View console: ${env.BUILD_URL}console
             • Attached: testlog.txt, auditlog.txt, integration-results.xml
           """.stripIndent(),
           attachmentsPattern: 'testlog.txt,auditlog.txt,integration-results.xml',
