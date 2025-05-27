@@ -66,9 +66,5 @@ pipeline {
     }
   }
 
-  post {
-    always {
-      // [Optional] send a combined email or leave for Task 2
-    }
-  }
+ 
 }
